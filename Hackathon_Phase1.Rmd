@@ -1,0 +1,109 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r #Reading the data}
+data=read.csv(file="Mod_Data.csv",header=TRUE)
+summary(data)
+library(tree)
+library(e1071)
+library(class)
+```
+
+```{r #Build 3 Models, each using one of different type of algorithm. Send me the model building command. (1 mark each + 1 for creative "DS" think = total 4 marks)}
+```
+
+
+```{r ----MODEL1-DECISION TREE----}
+set.seed(32) #TO SELECT THE SAMPLE SET OF SAMPLE
+#SPLITTING THE POPULATION AS 80% FOR TRAIN AND 20% FOR TEST 
+sample=sample.int(n=nrow(data),size=floor(.8*nrow(data)),replace=F)
+data_train=data[sample,]
+data_test=data[-sample,]
+#MODEL1
+data_model=tree(salary~age+workclass+education+occupation+hours_per_week+sex+race+marital_status,data=data_train)
+
+#PLOTTING THE DECISION TREE
+#plot(data_model)
+#text(data_model)
+summary(data_model)
+
+model_prediction=predict(data_model,data_test)
+maxidx=function(arr){
+ return(which(arr==max(arr)))
+}
+
+idx=apply(model_prediction,c(1),maxidx)
+modeltest_prediction=c('0','1')[idx]
+
+#CONFIRMATORY MATRIX
+confmat=table(modeltest_prediction,data_test$salary)
+confmat
+
+#ACCURACY COMPUTATION
+#MODEL1_ACCURACY
+accuracy=sum(diag(confmat))/sum(confmat)
+accuracy
+```
+
+```{r ----MODEL2 NAIVE BAYES---- }
+set.seed(32) #TO SELECT THE SAMPLE SET OF SAMPLE
+
+#SPLITTING THE POPULATION AS 80% FOR TRAIN AND 20% FOR TEST 
+sample=sample.int(n=nrow(data),size=floor(.8*nrow(data)),replace=F)
+Ndata_train=data[sample,]
+Ndata_test=data[-sample,]
+
+#BUILDING MODEL2
+model=naiveBayes(salary~age+workclass+education+marital_status+occupation+sex+race+country,data=Ndata_train)
+model
+pred=predict(model,Ndata_test[,-15])
+pred
+
+#CONFIRMATORY MATRIX
+confmat=table(pred,Ndata_test$salary)
+confmat
+
+#ACCURACY COMPUTATION
+#MODEL2_ACCURACY
+accuracy=sum(diag(confmat))/sum(confmat)
+accuracy
+```
+
+```{r ----MODEL3 K NEAREST NEIGHBOUR----}
+set.seed(32) #TO SELECT THE SAMPLE SET OF SAMPLE
+
+#SPLITTING THE POPULATION AS 80% FOR TRAIN AND 20% FOR TEST
+for(i in 1:14){
+  data[,i]=as.numeric(data[,i])
+}
+ksample=sample.int(n=nrow(data),size = floor(.8*nrow(data)),replace=F)
+k_train_data = data[sample,1:14]
+k_test_data = data[-sample,1:14]
+k_train_label=data[sample,15]
+k_test_label= data[-sample,15]
+
+#MODEL3
+k=7
+k_pred_label=knn(train = k_train_data,test=k_test_data,cl=k_train_label,k)
+
+#CONFIRMATORY MATRIX
+confmat=table(k_test_label,k_pred_label)
+confmat
+
+#MODEL3_ACCURACY
+#ACCURACY COMPUTATION
+accuracy=sum(diag(confmat))/sum(confmat)
+accuracy
+```
+
+----GENERALIZATION----
+For the given data, features have been co-relatively selected and modelled under Decision tree, Naive Bayes and K-Nearest
+The features have select for the models does'nt falls under underfit or overfit. The observed accuracy for each model are 77%, 77% and 79% for decision tree, Naive Bayes and K-Nearest Neighbour respectively. Thus I conclude for this scenario best model would be K-Nearest Neighbour which holds the maximum accuracy 79%.
